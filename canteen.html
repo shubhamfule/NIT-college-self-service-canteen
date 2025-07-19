@@ -1,0 +1,283 @@
+  <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NIT Canteen Self-Service</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: url('nit-logo.jpg') no-repeat center center fixed;
+      background-size: cover;
+      backdrop-filter: brightness(0.95);
+    }
+
+    h1 {
+      text-align: center;
+      color: #2e7d32;
+      font-weight: bold;
+    }
+
+    .container {
+      max-width: 700px;
+      margin: auto;
+      background: #ffffffd0;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      margin-top: 20px;
+    }
+
+    .menu, .cart, .receiver {
+      margin-top: 20px;
+    }
+
+    .item {
+      display: flex;
+      justify-content: space-between;
+      margin: 10px 0;
+      align-items: center;
+    }
+
+    .item span {
+      font-weight: bold;
+      color: #333;
+    }
+
+    .item button {
+      margin-left: 5px;
+    }
+
+    button {
+      padding: 6px 12px;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    .green { background: #43a047; }
+    .blue { background: #1e88e5; }
+    .orange { background: #fb8c00; }
+
+    .cart-items div {
+      margin-bottom: 8px;
+    }
+
+    .total {
+      font-weight: bold;
+      margin-top: 10px;
+      color: #2e7d32;
+    }
+
+    input[type="text"], input[type="number"] {
+      padding: 8px;
+      width: 80%;
+      margin-bottom: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    .user-type-btn {
+      margin: 10px 5px;
+      padding: 8px 16px;
+      background-color: #6a1b9a;
+      border-radius: 5px;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    .user-type-btn:hover {
+      background-color: #8e24aa;
+    }
+
+    #otp-section {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <h1><strong>NIT</strong> - Canteen Self-Service System</h1>
+
+  <!-- Login Form -->
+  <div class="container" id="login-form">
+    <h2>Login</h2>
+    <input type="text" id="mobile" placeholder="Enter Mobile Number"><br>
+    <button class="user-type-btn" onclick="sendOTP('student')">Login as Student</button>
+    <button class="user-type-btn" onclick="sendOTP('staff')">Login as Canteen Staff</button>
+  </div>
+
+  <!-- OTP Verification Section -->
+  <div class="container" id="otp-section">
+    <h3>Enter OTP sent to your mobile</h3>
+    <input type="number" id="otp-input" placeholder="Enter OTP">
+    <br>
+    <button class="blue" onclick="verifyOTP()">Verify OTP</button>
+  </div>
+
+  <!-- Student View -->
+  <div id="user-view" class="container" style="display: none;">
+    <h2>Menu</h2>
+    <div class="menu">
+      <div class="item">
+        <span>Samosa</span>
+        <div>
+          <button class="orange" onclick="addToCart('Samosa (Half)', 20)">Half ₹20</button>
+          <button class="orange" onclick="addToCart('Samosa (Full)', 30)">Full ₹30</button>
+        </div>
+      </div>
+
+      <div class="item">
+        <span>Manchurian Rice</span>
+        <div>
+          <button class="green" onclick="addToCart('Manchurian Rice (Half)', 50)">Half ₹50</button>
+          <button class="green" onclick="addToCart('Manchurian Rice (Full)', 80)">Full ₹80</button>
+        </div>
+      </div>
+
+      <div class="item">
+        <span>Noodles</span>
+        <div>
+          <button class="green" onclick="addToCart('Noodles (Half)', 50)">Half ₹50</button>
+          <button class="green" onclick="addToCart('Noodles (Full)', 80)">Full ₹80</button>
+        </div>
+      </div>
+
+      <div class="item">
+        <span>Cold Drink - ₹30</span>
+        <button class="blue" onclick="addToCart('Cold Drink', 30)">Add</button>
+      </div>
+
+      <div class="item">
+        <span>Tea - ₹10</span>
+        <button class="blue" onclick="addToCart('Tea', 10)">Add</button>
+      </div>
+    </div>
+
+    <div class="cart">
+      <h3>Your Cart</h3>
+      <div class="cart-items" id="cart-items">
+        <em>No items added yet.</em>
+      </div>
+      <div class="total" id="total">Total: ₹0</div>
+      <button class="green" onclick="placeOrder()">Place Order</button>
+      <button class="blue" onclick="clearCart()">Clear Cart</button>
+    </div>
+  </div>
+
+  <!-- Receiver View -->
+  <div id="receiver-view" class="container" style="display: none;">
+    <div class="receiver">
+      <h3>Received Orders</h3>
+      <div id="order-list"><em>No orders yet.</em></div>
+    </div>
+  </div>
+
+  <script>
+    let cart = {};
+    let orderList = [];
+    let generatedOTP = null;
+    let currentUserType = '';
+
+    function sendOTP(userType) {
+      const mobile = document.getElementById("mobile").value;
+      if (!mobile || mobile.length < 10) {
+        alert("Please enter a valid mobile number.");
+        return;
+      }
+
+      currentUserType = userType;
+      generatedOTP = Math.floor(1000 + Math.random() * 9000);
+      alert("Your OTP is: " + generatedOTP); // Simulated OTP
+
+      document.getElementById("login-form").style.display = "none";
+      document.getElementById("otp-section").style.display = "block";
+    }
+
+    function verifyOTP() {
+      const enteredOTP = document.getElementById("otp-input").value;
+      if (parseInt(enteredOTP) === generatedOTP) {
+        document.getElementById("otp-section").style.display = "none";
+        if (currentUserType === "student") {
+          document.getElementById("user-view").style.display = "block";
+        } else if (currentUserType === "staff") {
+          document.getElementById("receiver-view").style.display = "block";
+          updateOrderList();
+        }
+      } else {
+        alert("Incorrect OTP. Please try again.");
+      }
+    }
+
+    function addToCart(itemName, price) {
+      if (cart[itemName]) {
+        cart[itemName].quantity += 1;
+      } else {
+        cart[itemName] = { price: price, quantity: 1 };
+      }
+      updateCartDisplay();
+    }
+
+    function updateCartDisplay() {
+      const cartDiv = document.getElementById('cart-items');
+      const totalDiv = document.getElementById('total');
+      cartDiv.innerHTML = '';
+      let total = 0;
+
+      for (let item in cart) {
+        const itemTotal = cart[item].price * cart[item].quantity;
+        total += itemTotal;
+        cartDiv.innerHTML += `<div>${item} x ${cart[item].quantity} = ₹${itemTotal}</div>`;
+      }
+
+      if (total === 0) {
+        cartDiv.innerHTML = '<em>No items added yet.</em>';
+      }
+
+      totalDiv.innerText = `Total: ₹${total}`;
+    }
+
+    function clearCart() {
+      cart = {};
+      updateCartDisplay();
+    }
+
+    function placeOrder() {
+      if (Object.keys(cart).length === 0) {
+        alert("Cart is empty!");
+        return;
+      }
+      orderList.push(JSON.parse(JSON.stringify(cart)));
+      alert("Order placed successfully!");
+      clearCart();
+    }
+
+    function updateOrderList() {
+      const list = document.getElementById("order-list");
+      list.innerHTML = "";
+      if (orderList.length === 0) {
+        list.innerHTML = "<em>No orders yet.</em>";
+        return;
+      }
+
+      orderList.forEach((order, index) => {
+        let orderHTML = `<div><strong>Order ${index + 1}:</strong><ul>`;
+        for (let item in order) {
+          orderHTML += `<li>${item} x ${order[item].quantity}</li>`;
+        }
+        orderHTML += "</ul></div>";
+        list.innerHTML += orderHTML;
+      });
+    }
+  </script>
+
+</body>
+</html>
